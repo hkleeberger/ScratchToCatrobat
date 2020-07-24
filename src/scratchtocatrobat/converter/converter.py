@@ -2295,17 +2295,26 @@ class _BlocksConversionTraverser(scratch.AbstractBlocksTraverser):
             self.arguments = _with_unmapped_blocks_replaced_as_default_formula_value(self.arguments)
             for try_number in range(6):
                 try:
-                    # TODO: simplify
                     if try_number == 0:
-                        converted_args = [(common.int_or_float(arg) or arg if isinstance(arg, (str, unicode)) else arg) for arg in self.arguments]
+                        converted_args = []
+                        for arg in self.arguments:
+                            if isinstance(arg, (str, unicode)):
+                                converted_args.append(common.int_or_float(arg) or arg)
+                            else:
+                                converted_args.append(arg)
                     elif try_number == 1:
                         def handleBoolean(arg):
                             if isinstance(arg, bool):
                                 return int(arg)
                             else:
                                 return arg
-
-                        converted_args = [catformula.FormulaElement(catElementType.NUMBER, str(handleBoolean(arg)), None) if isinstance(arg, numbers.Number) else arg for arg in converted_args]  # @UndefinedVariable
+                        tmp_args = []
+                        for arg in converted_args: # @UndefinedVariable
+                            if isinstance(arg, numbers.Number):
+                                tmp_args.append(catformula.FormulaElement(catElementType.NUMBER, str(handleBoolean(arg)), None))
+                            else:
+                                tmp_args.append(arg)
+                        converted_args = tmp_args
                     elif try_number == 4:
                         converted_args = self.arguments
                     elif try_number == 2:
